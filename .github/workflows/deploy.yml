@@ -1,0 +1,30 @@
+name: Deploy Smart API
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # 1. Login to Azure (You'll set up a Secret for this)
+      - name: 'Az CLI login'
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # 2. Deploy Infrastructure (Bicep)
+      - name: Deploy Infrastructure
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: 'MySmartApiGroup'
+          template: ./infra/main.bicep
+
+      # 3. Deploy Python Code
+      - name: 'Deploy Azure Functions'
+        uses: Azure/functions-action@v1
+        with:
+          app-name: 'smartapi-your-unique-name' # Match your Bicep name
+          package: './src'
